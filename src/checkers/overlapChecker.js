@@ -48,8 +48,6 @@ function buildDateTime(
     endParts[0] * 60 +
     endParts[1];
 
-  // Midnight crossover
-
   if (
     endMinutes <
     startMinutes
@@ -92,19 +90,13 @@ export function checkOverlap(
   records
 ) {
 
-  const overlaps = [];
+  const results = [];
 
-  const overlapMap =
+  const grouped =
     new Map();
 
   records.forEach(
     (record) => {
-
-      const key =
-`${record.equipment}|
-${record.flightNo}
-|${record.regn}
-|${record.bayNo}`;
 
       const interval =
         buildDateTime(
@@ -117,16 +109,22 @@ ${record.flightNo}
         return;
       }
 
+      const key =
+`${record.equipment}|
+${record.category}|
+${record.regn}|
+${record.bayNo}`;
+
       if (
-        !overlapMap.has(key)
+        !grouped.has(key)
       ) {
-        overlapMap.set(
+        grouped.set(
           key,
           []
         );
       }
 
-      overlapMap
+      grouped
         .get(key)
         .push({
 
@@ -143,7 +141,7 @@ ${record.flightNo}
     }
   );
 
-  overlapMap.forEach(
+  grouped.forEach(
     (group) => {
 
       group.sort(
@@ -169,12 +167,99 @@ ${record.flightNo}
           const b =
             group[j];
 
+          const issueTypes =
+            [];
+
+          const remarks =
+            [];
+
+          // OVERLAP
+
           if (
             a.start < b.end &&
             b.start < a.end
           ) {
 
-            overlaps.push({
+            issueTypes.push(
+              "OVERLAP"
+            );
+
+            remarks.push(
+              "Same REGN and Bay have overlapping usage periods."
+            );
+
+          }
+
+          // DUPLICATE START DATE
+
+          if (
+            a.startDate &&
+            b.startDate &&
+            a.startDate ===
+            b.startDate
+          ) {
+
+            issueTypes.push(
+              "DUPLICATE_START_DATE"
+            );
+
+            remarks.push(
+              `Duplicate Start Date (${a.startDate}) found.`
+            );
+
+          }
+
+          // DUPLICATE END DATE
+
+          if (
+            a.endDate &&
+            b.endDate &&
+            a.endDate ===
+            b.endDate
+          ) {
+
+            issueTypes.push(
+              "DUPLICATE_END_DATE"
+            );
+
+            remarks.push(
+              `Duplicate End Date (${a.endDate}) found.`
+            );
+
+          }
+
+          // RECONNECTED
+
+          const gapMinutes =
+            (
+              b.start -
+              a.end
+            ) /
+            (1000 * 60);
+
+          if (
+            gapMinutes >= 0 &&
+            gapMinutes <= 120
+          ) {
+
+            issueTypes.push(
+              "RECONNECTED_WITHIN_2_HOURS"
+            );
+
+            remarks.push(
+              `Aircraft reconnected within ${Math.round(gapMinutes)} minutes.`
+            );
+
+          }
+
+          // ADD ONLY ONCE
+
+          if (
+            issueTypes.length >
+            0
+          ) {
+
+            results.push({
 
               excelRow1:
                 a.excelRowNumber,
@@ -191,14 +276,24 @@ ${record.flightNo}
               flightNo:
                 a.flightNo,
 
+              equipment:
+                a.equipment,
+
+              category:
+                a.category,
+
               regn:
                 a.regn,
 
               bayNo:
                 a.bayNo,
 
-              equipment:
-                a.equipment,
+              issueTypes,
+
+              remarks:
+                remarks.join(
+                  " | "
+                ),
 
               record1:
 `${a.startDate} ${a.startTime}
@@ -221,6 +316,6 @@ ${b.endDate} ${b.endTime}`
     }
   );
 
-  return overlaps;
+  return results;
 
 }

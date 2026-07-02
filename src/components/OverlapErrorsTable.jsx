@@ -3,9 +3,13 @@ function OverlapErrorsTable({
 }) {
 
   if (!data || data.length === 0) {
+
     return (
       <div style={{ marginTop: "30px" }}>
-        <h2>Overlap Records</h2>
+
+        <h2>
+          Overlap / Duplicate / Reconnection Issues
+        </h2>
 
         <p
           style={{
@@ -13,16 +17,21 @@ function OverlapErrorsTable({
             fontWeight: "bold"
           }}
         >
-          No overlap found.
+          No issues found.
         </p>
+
       </div>
     );
+
   }
 
   return (
+
     <div style={{ marginTop: "30px" }}>
 
-      <h2>Overlap Records</h2>
+      <h2>
+        Overlap / Duplicate / Reconnection Issues
+      </h2>
 
       <table
         border="1"
@@ -37,6 +46,8 @@ function OverlapErrorsTable({
 
           <tr>
 
+            <th>Issues Found</th>
+
             <th>Excel Row 1</th>
             <th>Excel Row 2</th>
 
@@ -47,13 +58,13 @@ function OverlapErrorsTable({
 
             <th>Equipment</th>
 
+            <th>Category</th>
+
             <th>REGN</th>
 
             <th>Bay No</th>
 
-            <th>Record 1</th>
-
-            <th>Record 2</th>
+            <th>Remarks</th>
 
           </tr>
 
@@ -64,6 +75,15 @@ function OverlapErrorsTable({
           {data.map((row, index) => (
 
             <tr key={index}>
+
+              <td
+                style={{
+                  fontWeight: "bold",
+                  color: "red"
+                }}
+              >
+                {row.issueTypes.join(", ")}
+              </td>
 
               <td>
                 {row.excelRow1}
@@ -90,6 +110,10 @@ function OverlapErrorsTable({
               </td>
 
               <td>
+                {row.category}
+              </td>
+
+              <td>
                 {row.regn}
               </td>
 
@@ -98,11 +122,7 @@ function OverlapErrorsTable({
               </td>
 
               <td>
-                {row.record1}
-              </td>
-
-              <td>
-                {row.record2}
+                {row.remarks}
               </td>
 
             </tr>
@@ -114,7 +134,9 @@ function OverlapErrorsTable({
       </table>
 
     </div>
+
   );
+
 }
 
 export default OverlapErrorsTable;
